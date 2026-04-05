@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#080c10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KagelFit">
+<meta name="description" content="AI-powered Kegel exercise trainer for pelvic floor health">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>KagelFit – Pelvic Floor AI Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #080c10;
+  --surface: #0f1620;
+  --surface2: #161f2c;
+  --border: rgba(255,255,255,0.07);
+  --accent: #00d4a0;
+  --accent2: #0099ff;
+  --accent3: #ff6b9d;
+  --text: #e8edf4;
+  --muted: #5a6a7e;
+  --danger: #ff4f6e;
+  --success: #00d4a0;
+  --warn: #ffb547;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --r: 14px;
+  --r-lg: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(0,212,160,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  background: rgba(8,12,16,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  z-index: 100;
+}
+.nav-logo {
+  font-family: var(--font-head);
+  font-weight: 800; font-size: 18px;
+  color: var(--accent); letter-spacing: -0.5px;
+}
+.nav-logo span { color: var(--text); }
+
+/* ── TABS ── */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(8,12,16,0.92);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  display: flex; z-index: 100;
+}
+.tab-btn {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 10px 0 12px;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted);
+  font-family: var(--font-body); font-size: 11px; font-weight: 500;
+  transition: color 0.2s;
+}
+.tab-btn.active { color: var(--accent); }
+.tab-btn svg { width: 22px; height: 22px; }
+
+/* ── PAGES ── */
+.page { display: none; padding: 80px 0 90px; min-height: 100vh; position: relative; z-index: 1; }
+.page.active { display: block; }
+.container { max-width: 480px; margin: 0 auto; padding: 0 20px; }
+
+/* ── TYPOGRAPHY ── */
+.section-title {
+  font-family: var(--font-head);
+  font-size: 22px; font-weight: 800;
+  color: var(--text); margin-bottom: 4px;
+}
+.section-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px; margin-bottom: 16px;
+  position: relative; overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,212,160,0.3), transparent);
+}
+
+/* ── RING TIMER ── */
+.trainer-ring-wrap { display: flex; justify-content: center; margin: 10px 0 24px; }
+.ring-container { position: relative; width: 200px; height: 200px; }
+.ring-svg { width: 200px; height: 200px; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--surface2); stroke-width: 10; }
+.ring-progress {
+  fill: none; stroke: url(#ringGrad);
+  stroke-width: 10; stroke-linecap: round;
+  stroke-dasharray: 502; stroke-dashoffset: 502;
+  transition: stroke-dashoffset 0.1s linear;
+}
+.ring-center {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%); text-align: center;
+}
+.ring-label {
+  font-family: var(--font-head);
+  font-size: 38px; font-weight: 800;
+  color: var(--accent); line-height: 1;
+}
+.ring-sublabel { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+.phase-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(0,212,160,0.1);
+  border: 1px solid rgba(0,212,160,0.25);
+  border-radius: 100px; padding: 6px 14px;
+  font-size: 13px; font-weight: 600; color: var(--accent);
+  margin-bottom: 16px;
+}
+.phase-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); animation: pulse 1.2s infinite;
+}
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:0.6} }
+
+/* ── BUTTONS ── */
+.controls { display: flex; gap: 12px; justify-content: center; margin: 8px 0; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px 24px; border-radius: var(--r);
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.18s; white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #000; }
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--surface); }
+.btn-lg { padding: 16px 36px; font-size: 16px; border-radius: 16px; }
+.btn-icon { padding: 13px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── SET PIPS ── */
+.set-info { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+.set-pip {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  transition: all 0.3s;
+}
+.set-pip.done { background: var(--accent); border-color: var(--accent); }
+.set-pip.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,212,160,0.2); }
+
+/* ── PROGRAMS ── */
+.prog-grid { display: flex; flex-direction: column; gap: 12px; }
+.prog-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 18px 20px;
+  cursor: pointer; transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+.prog-card:hover { border-color: rgba(0,212,160,0.3); transform: translateY(-1px); }
+.prog-card.selected { border-color: var(--accent); background: rgba(0,212,160,0.05); }
+.prog-card::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(0,212,160,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+.prog-title {
+  font-family: var(--font-head);
+  font-weight: 700; font-size: 16px; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 10px;
+}
+.prog-badge {
+  font-size: 10px; font-family: var(--font-body);
+  padding: 2px 8px; border-radius: 100px;
+  background: rgba(0,212,160,0.1); color: var(--accent);
+  border: 1px solid rgba(0,212,160,0.2);
+  font-weight: 600; letter-spacing: 0.5px;
+}
+.prog-badge.med { background: rgba(255,181,71,0.1); color: var(--warn); border-color: rgba(255,181,71,0.2); }
+.prog-badge.hard { background: rgba(255,79,110,0.1); color: var(--danger); border-color: rgba(255,79,110,0.2); }
+.prog-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+.prog-meta { display: flex; gap: 16px; }
+.prog-stat { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.prog-stat strong { color: var(--text); }
+
+/* ── STATS ── */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; }
+.stat-val { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.streak-bar { display: flex; gap: 4px; margin: 10px 0; }
+.streak-day { flex: 1; height: 28px; border-radius: 6px; background: var(--surface2); border: 1px solid var(--border); transition: all 0.3s; }
+.streak-day.done { background: var(--accent); border-color: var(--accent); }
+.streak-day.today { background: rgba(0,212,160,0.4); border-color: var(--accent); }
+.streak-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); }
+
+/* ── AI COACH ── */
+.ai-chat { display: flex; flex-direction: column; gap: 12px; }
+.ai-msg {
+  padding: 14px 16px; border-radius: var(--r);
+  font-size: 14px; line-height: 1.6;
+  animation: fadeUp 0.3s ease;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.ai-msg.ai { background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.ai-msg.ai::before {
+  content: '🤖 AI Coach';
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--accent); margin-bottom: 6px; font-family: var(--font-head);
+}
+.ai-msg.user {
+  background: rgba(0,212,160,0.08);
+  border: 1px solid rgba(0,212,160,0.15);
+  border-bottom-right-radius: 4px;
+  align-self: flex-end; max-width: 85%;
+}
+.ai-input-row { display: flex; gap: 8px; align-items: flex-end; margin-top: 8px; }
+.ai-input {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 12px 14px;
+  color: var(--text); font-family: var(--font-body); font-size: 14px;
+  outline: none; resize: none; min-height: 44px; max-height: 120px;
+  transition: border-color 0.2s;
+}
+.ai-input:focus { border-color: rgba(0,212,160,0.4); }
+.ai-input::placeholder { color: var(--muted); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.chip {
+  padding: 6px 12px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 100px; font-size: 12px; color: var(--muted);
+  cursor: pointer; transition: all 0.2s;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,160,0.05); }
+
+/* ── SETTINGS ── */
+.settings-section { margin-bottom: 24px; }
+.settings-label {
+  font-family: var(--font-head); font-size: 13px;
+  color: var(--muted); letter-spacing: 1px;
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row-label { font-size: 14px; }
+.settings-row-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.toggle {
+  width: 44px; height: 24px; border-radius: 100px;
+  background: var(--surface2); border: 1px solid var(--border);
+  position: relative; cursor: pointer; transition: background 0.2s;
+}
+.toggle.on { background: var(--accent); border-color: var(--accent); }
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: transform 0.2s;
+}
+.toggle.on::after { transform: translateX(20px); }
+.range-input {
+  -webkit-appearance: none; appearance: none;
+  width: 120px; height: 4px; background: var(--surface2);
+  border-radius: 100px; outline: none;
+}
+.range-input::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
+
+/* ── ONBOARDING ── */
+#onboarding {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 24px; text-align: center;
+}
+.onb-icon { font-size: 64px; margin-bottom: 24px; }
+.onb-title { font-family: var(--font-head); font-size: 30px; font-weight: 800; margin-bottom: 12px; line-height: 1.1; }
+.onb-title span { color: var(--accent); }
+.onb-sub { font-size: 15px; color: var(--muted); line-height: 1.6; max-width: 320px; margin-bottom: 36px; }
+.onb-features { display: flex; flex-direction: column; gap: 12px; margin-bottom: 36px; width: 100%; max-width: 360px; }
+.onb-feat {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px 16px; text-align: left;
+}
+.onb-feat-icon { font-size: 24px; flex-shrink: 0; }
+.onb-feat-text { font-size: 13px; line-height: 1.4; }
+.onb-feat-text strong { color: var(--accent); font-weight: 600; }
+
+/* ── MISC ── */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+.empty-state .emo { font-size: 40px; margin-bottom: 12px; }
+.loading-dots { display: inline-flex; gap: 4px; align-items: center; }
+.loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: dot 1.2s infinite; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dot { 0%,80%,100%{transform:scale(0.5);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.tip-box {
+  background: rgba(0,153,255,0.07); border: 1px solid rgba(0,153,255,0.15);
+  border-radius: var(--r); padding: 12px 14px;
+  font-size: 13px; color: #a8c5e0; line-height: 1.5;
+  margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start;
+}
+.tip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── SESSION SUMMARY ── */
+.session-summary {
+  display: none; position: fixed; inset: 0; z-index: 150;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  align-items: center; justify-content: center; padding: 24px;
+}
+.session-summary.show { display: flex; }
+.summary-card {
+  background: var(--surface); border: 1px solid rgba(0,212,160,0.2);
+  border-radius: 24px; padding: 32px 24px;
+  width: 100%; max-width: 360px; text-align: center;
+  animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+.summary-emoji { font-size: 60px; margin-bottom: 12px; }
+.summary-title { font-family: var(--font-head); font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+.summary-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+.summary-stats { display: flex; justify-content: space-around; margin-bottom: 24px; }
+.summary-stat-val { font-family: var(--font-head); font-size: 26px; font-weight: 800; color: var(--accent); }
+.summary-stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div id="onboarding">
+  <div class="onb-icon">💪</div>
+  <div class="onb-title">Pelvic Floor<br><span>AI Trainer</span></div>
+  <div class="onb-sub">Science-backed Kegel exercises with an AI coach that adapts to your fitness level and progress.</div>
+  <div class="onb-features">
+    <div class="onb-feat">
+      <div class="onb-feat-icon">🎯</div>
+      <div class="onb-feat-text"><strong>Guided Exercise Sessions</strong> — Hold, release, and breathe with real-time visual cues</div>
+    </div>
+    <div class="onb-feat">
+      <div class="onb-feat-icon">🤖</div>
+      <div class="onb-feat-text"><strong>AI Coach</strong> — Personalized advice, form tips & program adjustments</div>
+    </div>
+    <div class="onb-feat">
+      <div class="onb-feat-icon">📈</div>
+      <div class="onb-feat-text"><strong>Progress Tracking</strong> — Streaks, session history & strength levels</div>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-lg" onclick="startApp()">Get Started →</button>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Kagel<span>Fit</span></div>
+  <div style="font-size:12px;color:var(--muted);" id="nav-streak">🔥 0 day streak</div>
+</nav>
+
+<!-- SESSION SUMMARY MODAL -->
+<div class="session-summary" id="sessionSummary">
+  <div class="summary-card">
+    <div class="summary-emoji">🏆</div>
+    <div class="summary-title">Session Complete!</div>
+    <div class="summary-sub" id="summaryMsg">Great work on your pelvic floor!</div>
+    <div class="summary-stats">
+      <div>
+        <div class="summary-stat-val" id="summaryContractions">0</div>
+        <div class="summary-stat-label">Contractions</div>
+      </div>
+      <div>
+        <div class="summary-stat-val" id="summaryDuration">0s</div>
+        <div class="summary-stat-label">Hold Time</div>
+      </div>
+      <div>
+        <div class="summary-stat-val" id="summaryXP">+10</div>
+        <div class="summary-stat-label">XP Earned</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="closeSummary()">Continue</button>
+  </div>
+</div>
+
+<!-- PAGE: TRAIN -->
+<div class="page active" id="page-train">
+  <div class="container">
+    <div class="section-title" style="margin-top:8px;">Today's Session</div>
+    <div class="section-sub" id="programLabel">Beginner Foundation · Week 1</div>
+
+    <div class="card" style="text-align:center;padding:28px 20px;">
+      <div id="phaseBadge" class="phase-badge" style="margin-bottom:16px;">
+        <div class="phase-dot"></div>
+        Ready to Begin
+      </div>
+
+      <div class="trainer-ring-wrap">
+        <div class="ring-container">
+          <svg class="ring-svg" viewBox="0 0 180 180">
+            <defs>
+              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#00d4a0"/>
+                <stop offset="100%" stop-color="#0099ff"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="90" cy="90" r="80"/>
+            <circle class="ring-progress" id="ringProgress" cx="90" cy="90" r="80"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-label" id="timerDisplay">0</div>
+            <div class="ring-sublabel" id="timerSublabel">seconds</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="instructionText" style="font-size:15px;color:var(--muted);margin-bottom:20px;min-height:20px;">
+        Press Start to begin your session
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-secondary btn-icon" onclick="resetSession()" id="resetBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+          </svg>
+        </button>
+        <button class="btn btn-primary btn-lg" id="startBtn" onclick="toggleSession()">Start Session</button>
+        <button class="btn btn-secondary btn-icon" onclick="showExplainModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="set-info" id="setPips" style="margin-top:16px;"></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">
+        Set <span id="currentSet">0</span> of <span id="totalSets">5</span>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-icon">💡</div>
+      <div id="tipText">Contract the muscles you'd use to stop urinating. Don't hold your breath or tighten your abs.</div>
+    </div>
+
+    <div class="card">
+      <div style="font-family:var(--font-head);font-weight:700;font-size:15px;margin-bottom:12px;">Session Plan</div>
+      <div id="sessionPlan" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: PROGRAMS -->
+<div class="page" id="page-programs">
+  <div class="container">
+    <div class="section-title" style="margin-top:8px;">Programs</div>
+    <div class="section-sub">Choose your training plan</div>
+    <div class="prog-grid" id="progGrid"></div>
+  </div>
+</div>
+
+<!-- PAGE: STATS -->
+<div class="page" id="page-stats">
+  <div class="container">
+    <div class="section-title" style="margin-top:8px;">Progress</div>
+    <div class="section-sub">Your pelvic floor journey</div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="card">
+      <div style="font-family:var(--font-head);font-weight:700;font-size:15px;margin-bottom:12px;">Weekly Streak</div>
+      <div class="streak-bar" id="streakBar"></div>
+      <div class="streak-label" id="streakLabels"></div>
+    </div>
+    <div class="card">
+      <div style="font-family:var(--font-head);font-weight:700;font-size:15px;margin-bottom:12px;">Session History</div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: AI COACH -->
+<div class="page" id="page-ai">
+  <div class="container">
+    <div class="section-title" style="margin-top:8px;">AI Coach</div>
+    <div class="section-sub">Ask anything about pelvic floor training</div>
+    <div class="chip-row" id="quickChips"></div>
+    <div class="card" style="padding:16px;">
+      <div class="ai-chat" id="aiChat"></div>
+      <div class="divider"></div>
+      <div class="ai-input-row">
+        <textarea class="ai-input" id="aiInput" placeholder="Ask your AI coach..." rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMsg();}"></textarea>
+        <button class="btn btn-primary btn-icon" onclick="sendAiMsg()" id="aiSendBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+            <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="container">
+    <div class="section-title" style="margin-top:8px;">Settings</div>
+    <div class="section-sub">Personalize your training</div>
+
+    <div class="card">
+      <div class="settings-label">Training</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Hold Duration</div>
+          <div class="settings-row-sub" id="holdDurLabel">5 seconds</div>
+        </div>
+        <input type="range" class="range-input" min="3" max="15" value="5" id="holdDurInput" oninput="updateSettings()">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Rest Duration</div>
+          <div class="settings-row-sub" id="restDurLabel">5 seconds</div>
+        </div>
+        <input type="range" class="range-input" min="3" max="15" value="5" id="restDurInput" oninput="updateSettings()">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Sets per Session</div>
+          <div class="settings-row-sub" id="setsLabel">5 sets</div>
+        </div>
+        <input type="range" class="range-input" min="3" max="15" value="5" id="setsInput" oninput="updateSettings()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="settings-label">Notifications</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Daily Reminder</div>
+          <div class="settings-row-sub">Get reminded to train</div>
+        </div>
+        <div class="toggle" id="notifToggle" onclick="toggleNotif()"></div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Vibration Feedback</div>
+          <div class="settings-row-sub">Haptic on phase change</div>
+        </div>
+        <div class="toggle on" id="vibrateToggle" onclick="toggleVibrate()"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="settings-label">Data</div>
+      <div class="settings-row" onclick="exportData()" style="cursor:pointer;">
+        <div class="settings-row-label">Export Progress Data</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" width="18" height="18">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </div>
+      <div class="settings-row" onclick="clearData()" style="cursor:pointer;">
+        <div class="settings-row-label" style="color:var(--danger);">Reset All Data</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" width="18" height="18">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      </div>
+    </div>
+
+    <div style="text-align:center;font-size:12px;color:var(--muted);padding:16px 0;">
+      KagelFit v1.0 · Pelvic Floor AI Trainer<br>Exercises based on NHS & Mayo Clinic guidelines
+    </div>
+  </div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('train',this)" id="tab-train">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
+    </svg>
+    Train
+  </button>
+  <button class="tab-btn" onclick="switchTab('programs',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+    </svg>
+    Programs
+  </button>
+  <button class="tab-btn" onclick="switchTab('stats',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+    Progress
+  </button>
+  <button class="tab-btn" onclick="switchTab('ai',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    AI Coach
+  </button>
+  <button class="tab-btn" onclick="switchTab('settings',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 0 4.93 19.07 10 10 0 0 0 19.07 4.93Z"/>
+    </svg>
+    Settings
+  </button>
+</div>
+
+<script>
+// ── STATE ──
+let state = {
+  streak: 0, totalSessions: 0, totalContractions: 0, totalMinutes: 0,
+  history: [], lastSessionDate: null, selectedProgram: 0,
+  settings: { holdDur: 5, restDur: 5, sets: 5, vibrate: true, notif: false },
+  aiHistory: []
+};
+try { const s = localStorage.getItem('kegelfit_v1'); if (s) state = {...state, ...JSON.parse(s)}; } catch(e) {}
+function save() { try { localStorage.setItem('kegelfit_v1', JSON.stringify(state)); } catch(e) {} }
+
+// ── PROGRAMS ──
+const PROGRAMS = [
+  { name:"Beginner Foundation", level:"BEGINNER", levelClass:"", desc:"Perfect for first-timers. Build awareness and basic control of your pelvic floor muscles.", weeks:4, sessions:"Daily", hold:3, rest:6, sets:5, icon:"🌱" },
+  { name:"Strength Builder", level:"INTERMEDIATE", levelClass:"med", desc:"Increase holding duration and reps. Designed for those with 2+ weeks of consistent training.", weeks:6, sessions:"Daily", hold:7, rest:5, sets:8, icon:"💪" },
+  { name:"Advanced Performance", level:"ADVANCED", levelClass:"hard", desc:"High-intensity pelvic floor conditioning with varied hold patterns and quick-twitch training.", weeks:8, sessions:"Daily", hold:10, rest:4, sets:10, icon:"🔥" },
+  { name:"Quick 5-Min", level:"ANY LEVEL", levelClass:"", desc:"Busy day? This express session keeps your routine alive in just 5 minutes.", weeks:"∞", sessions:"Daily", hold:5, rest:3, sets:5, icon:"⚡" }
+];
+
+const TIPS = [
+  "Contract the muscles you'd use to stop urinating. Don't tighten abs or buttocks.",
+  "Breathe normally throughout. Never hold your breath during contractions.",
+  "Quality beats quantity — a strong focused contraction is better than many weak ones.",
+  "You can do Kegels anywhere: sitting, standing, or lying down.",
+  "It takes 4–6 weeks of consistent training to see noticeable results.",
+  "Both men and women benefit from pelvic floor training.",
+  "After each contraction, fully relax for the rest period — this is just as important.",
+];
+
+// ── SESSION ──
+let session = { running:false, phase:'idle', phaseTime:0, set:0, timer:null, sessionStart:null, contractions:0 };
+const CIRCUMFERENCE = 2 * Math.PI * 80;
+
+function startApp() {
+  document.getElementById('onboarding').style.display = 'none';
+  initAll();
+}
+
+function initAll() {
+  renderPrograms(); renderStats(); renderSettings();
+  renderSessionPlan(); buildPips(); renderAI(); renderStreakNav(); rotateTip();
+}
+
+function rotateTip() {
+  document.getElementById('tipText').textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab === 'stats') renderStats();
+}
+
+function renderSessionPlan() {
+  const sets = state.settings.sets, hold = state.settings.holdDur, rest = state.settings.restDur;
+  const el = document.getElementById('sessionPlan');
+  el.innerHTML = '';
+  const steps = [];
+  for (let i = 0; i < sets; i++) {
+    steps.push({ label:`Set ${i+1}: Contract`, dur:`${hold}s`, icon:'🔴' });
+    if (i < sets-1) steps.push({ label:`Set ${i+1}: Rest`, dur:`${rest}s`, icon:'🟢' });
+  }
+  steps.slice(0,6).forEach(s => {
+    el.innerHTML += `<div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);">
+      <span>${s.icon}</span><span>${s.label}</span><span style="margin-left:auto;font-weight:600;color:var(--text);">${s.dur}</span></div>`;
+  });
+  if (steps.length > 6) el.innerHTML += `<div style="font-size:12px;color:var(--muted);text-align:center;padding-top:4px;">+${steps.length-6} more steps</div>`;
+  document.getElementById('programLabel').textContent = `${PROGRAMS[state.selectedProgram].name} · ${sets} sets`;
+  document.getElementById('totalSets').textContent = sets;
+}
+
+function buildPips() {
+  const el = document.getElementById('setPips');
+  el.innerHTML = '';
+  for (let i = 0; i < state.settings.sets; i++) el.innerHTML += `<div class="set-pip" id="pip_${i}"></div>`;
+}
+
+function toggleSession() {
+  if (session.phase === 'idle' || session.phase === 'complete') startSession();
+  else if (session.running) pauseSession();
+  else resumeSession();
+}
+
+function startSession() {
+  session = { running:true, phase:'contract', phaseTime:0, set:0, timer:null, sessionStart:Date.now(), contractions:0 };
+  buildPips(); updatePip(0,'active');
+  document.getElementById('startBtn').textContent = 'Pause';
+  session.timer = setInterval(tick, 1000);
+  updatePhaseUI();
+}
+
+function pauseSession() {
+  session.running = false; clearInterval(session.timer);
+  document.getElementById('startBtn').textContent = 'Resume';
+}
+
+function resumeSession() {
+  session.running = true;
+  document.getElementById('startBtn').textContent = 'Pause';
+  session.timer = setInterval(tick, 1000);
+}
+
+function resetSession() {
+  clearInterval(session.timer);
+  session = { running:false, phase:'idle', phaseTime:0, set:0, timer:null, sessionStart:null, contractions:0 };
+  buildPips();
+  document.getElementById('startBtn').textContent = 'Start Session';
+  document.getElementById('timerDisplay').textContent = '0';
+  document.getElementById('instructionText').textContent = 'Press Start to begin your session';
+  document.getElementById('phaseBadge').innerHTML = '<div class="phase-dot"></div> Ready to Begin';
+  document.getElementById('ringProgress').style.strokeDashoffset = CIRCUMFERENCE;
+  document.getElementById('currentSet').textContent = '0';
+  rotateTip();
+}
+
+function tick() {
+  const hold = state.settings.holdDur, rest = state.settings.restDur, sets = state.settings.sets;
+  session.phaseTime++;
+  const total = session.phase === 'contract' ? hold : rest;
+  const remaining = total - session.phaseTime;
+  document.getElementById('timerDisplay').textContent = Math.max(0, remaining);
+  const offset = CIRCUMFERENCE * (1 - Math.min(session.phaseTime / total, 1));
+  document.getElementById('ringProgress').style.strokeDashoffset = offset;
+
+  if (session.phaseTime >= total) {
+    session.phaseTime = 0;
+    if (session.phase === 'contract') {
+      session.contractions++;
+      updatePip(session.set, 'done');
+      if (session.set + 1 >= sets) { completeSession(); return; }
+      session.phase = 'rest';
+      if (state.settings.vibrate && navigator.vibrate) navigator.vibrate(100);
+    } else {
+      session.set++;
+      session.phase = 'contract';
+      updatePip(session.set, 'active');
+      if (state.settings.vibrate && navigator.vibrate) navigator.vibrate([50,50,100]);
+    }
+    document.getElementById('currentSet').textContent = session.set + 1;
+    updatePhaseUI();
+  }
+}
+
+function updatePhaseUI() {
+  const badge = document.getElementById('phaseBadge');
+  const instr = document.getElementById('instructionText');
+  if (session.phase === 'contract') {
+    badge.innerHTML = '<div class="phase-dot" style="background:var(--accent3);animation:pulse 0.8s infinite"></div> <span style="color:var(--accent3)">SQUEEZE</span>';
+    instr.textContent = 'Tighten your pelvic floor muscles firmly. Hold it!';
+  } else {
+    badge.innerHTML = '<div class="phase-dot"></div> <span style="color:var(--accent)">RELAX</span>';
+    instr.textContent = 'Completely release the muscles. Breathe and relax.';
+  }
+}
+
+function completeSession() {
+  clearInterval(session.timer);
+  session.phase = 'complete'; session.running = false;
+  document.getElementById('startBtn').textContent = 'Start Session';
+  document.getElementById('phaseBadge').innerHTML = '<div class="phase-dot"></div> ✅ Complete!';
+  document.getElementById('instructionText').textContent = 'Session complete! Excellent work!';
+  document.getElementById('ringProgress').style.strokeDashoffset = 0;
+  if (state.settings.vibrate && navigator.vibrate) navigator.vibrate([100,50,100,50,200]);
+
+  const dur = Math.round((Date.now() - session.sessionStart) / 1000);
+  state.totalSessions++;
+  state.totalContractions += session.contractions;
+  state.totalMinutes += Math.round(dur / 60);
+
+  const today = new Date().toDateString();
+  if (state.lastSessionDate !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    state.streak = state.lastSessionDate === yesterday ? state.streak + 1 : 1;
+    state.lastSessionDate = today;
+  }
+  state.history.unshift({ date:new Date().toLocaleDateString(), contractions:session.contractions, dur, program:PROGRAMS[state.selectedProgram].name });
+  if (state.history.length > 30) state.history.pop();
+  save(); renderStreakNav();
+
+  document.getElementById('summaryContractions').textContent = session.contractions;
+  document.getElementById('summaryDuration').textContent = state.settings.holdDur + 's';
+  document.getElementById('summaryXP').textContent = '+' + (session.contractions * 2);
+  document.getElementById('summaryMsg').textContent = state.streak > 1 ? `🔥 ${state.streak} day streak!` : 'Great work on your pelvic floor!';
+  document.getElementById('sessionSummary').classList.add('show');
+}
+
+function closeSummary() { document.getElementById('sessionSummary').classList.remove('show'); resetSession(); }
+function updatePip(idx, status) { const el = document.getElementById('pip_'+idx); if(el) el.className = 'set-pip '+status; }
+
+function renderPrograms() {
+  document.getElementById('progGrid').innerHTML = PROGRAMS.map((p,i) => `
+    <div class="prog-card ${state.selectedProgram===i?'selected':''}" onclick="selectProgram(${i})">
+      <div class="prog-title">${p.icon} ${p.name}<span class="prog-badge ${p.levelClass}">${p.level}</span></div>
+      <div class="prog-desc">${p.desc}</div>
+      <div class="prog-meta">
+        <div class="prog-stat">🗓 <strong>${p.weeks}</strong> weeks</div>
+        <div class="prog-stat">⏱ Hold <strong>${p.hold}s</strong></div>
+        <div class="prog-stat">📦 <strong>${p.sets}</strong> sets</div>
+      </div>
+    </div>`).join('');
+}
+
+function selectProgram(i) {
+  state.selectedProgram = i;
+  const p = PROGRAMS[i];
+  state.settings.holdDur = p.hold; state.settings.restDur = p.rest; state.settings.sets = p.sets;
+  save(); renderPrograms(); renderSettings(); renderSessionPlan(); buildPips();
+  switchTab('train', document.getElementById('tab-train'));
+}
+
+function renderStats() {
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${state.streak}</div><div class="stat-label">🔥 Day Streak</div></div>
+    <div class="stat-card"><div class="stat-val">${state.totalSessions}</div><div class="stat-label">💪 Sessions</div></div>
+    <div class="stat-card"><div class="stat-val">${state.totalContractions}</div><div class="stat-label">🎯 Contractions</div></div>
+    <div class="stat-card"><div class="stat-val">${state.totalMinutes}m</div><div class="stat-label">⏱ Total Time</div></div>`;
+
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], today = new Date();
+  const bar = document.getElementById('streakBar'), labels = document.getElementById('streakLabels');
+  bar.innerHTML = ''; labels.innerHTML = '';
+  const sessionDates = new Set(state.history.map(h => h.date));
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today - i*86400000), dateStr = d.toLocaleDateString(), isToday = i===0;
+    bar.innerHTML += `<div class="streak-day ${sessionDates.has(dateStr)?'done':(isToday?'today':'')}"></div>`;
+    labels.innerHTML += `<span>${days[d.getDay()]}</span>`;
+  }
+
+  const hist = document.getElementById('historyList');
+  hist.innerHTML = !state.history.length
+    ? '<div class="empty-state"><div class="emo">📋</div>No sessions yet. Start training!</div>'
+    : state.history.slice(0,10).map(h => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <div><div style="font-weight:500;">${h.program}</div><div style="color:var(--muted);font-size:11px;">${h.date} · ${Math.round(h.dur/60)}min</div></div>
+        <div style="color:var(--accent);font-weight:600;">${h.contractions} reps</div>
+      </div>`).join('');
+}
+
+function renderStreakNav() { document.getElementById('nav-streak').textContent = `🔥 ${state.streak} day streak`; }
+
+const QUICK_PROMPTS = ["Am I doing Kegels correctly?","How long until I see results?","Tips for better control","What are the benefits?","Can men do Kegels?","Best time to train?"];
+
+function renderAI() {
+  document.getElementById('quickChips').innerHTML = QUICK_PROMPTS.map(q => `<div class="chip" onclick="quickPrompt('${q}')">${q}</div>`).join('');
+  const chat = document.getElementById('aiChat');
+  if (!state.aiHistory.length) {
+    chat.innerHTML = `<div class="ai-msg ai">Hi! I'm your Pelvic Floor AI Coach 👋<br><br>I can help with proper technique, program selection, answering questions about Kegel exercises, and optimising your training.<br><br>What would you like to know?</div>`;
+  } else {
+    chat.innerHTML = state.aiHistory.map(m => `<div class="ai-msg ${m.role}">${m.content}</div>`).join('');
+  }
+}
+
+function quickPrompt(q) { document.getElementById('aiInput').value = q; sendAiMsg(); }
+
+async function sendAiMsg() {
+  const input = document.getElementById('aiInput'), msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  const chat = document.getElementById('aiChat');
+  state.aiHistory.push({ role:'user', content:msg });
+  chat.innerHTML += `<div class="ai-msg user">${msg}</div>`;
+  const loadingId = 'loading_' + Date.now();
+  chat.innerHTML += `<div class="ai-msg ai" id="${loadingId}"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+  chat.scrollTop = chat.scrollHeight;
+
+  const p = PROGRAMS[state.selectedProgram];
+  const systemPrompt = `You are an expert pelvic floor physiotherapist and Kegel exercise coach. 
+The user follows the "${p.name}" program (${p.level} level, ${state.settings.holdDur}s hold, ${state.settings.sets} sets).
+Stats: ${state.totalSessions} sessions completed, ${state.streak} day streak, ${state.totalContractions} total contractions.
+Give practical, medically accurate, encouraging advice. Keep responses concise (2-4 short paragraphs). Be warm and motivating.
+Do not recommend medications. For medical issues, suggest consulting a pelvic floor physiotherapist.`;
+
+  const PROXY_URL = 'https://time-tracker-proxy.depak0011.workers.dev';
+
+  // Build Gemini-style contents array (system prompt injected as first user turn)
+  const history = state.aiHistory.slice(-10);
+  const contents = [];
+  contents.push({ role:'user', parts:[{ text: systemPrompt + '\n\nUser: ' + history[0]?.content || msg }] });
+  if (history.length > 1) {
+    for (let i = 1; i < history.length; i++) {
+      contents.push({ role: history[i].role === 'ai' ? 'model' : 'user', parts:[{ text: history[i].content }] });
+    }
+  } else {
+    contents[0] = { role:'user', parts:[{ text: systemPrompt + '\n\nUser: ' + msg }] };
+  }
+
+  try {
+    const res = await fetch(PROXY_URL, {
+      method:'POST',
+      mode:'cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ model:'gemini-1.5-flash', max_tokens:1000, contents })
+    });
+    const data = await res.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
+      || data.content?.[0]?.text
+      || 'Sorry, I had trouble responding. Please try again.';
+    state.aiHistory.push({ role:'ai', content:reply }); save();
+    document.getElementById(loadingId)?.remove();
+    chat.innerHTML += `<div class="ai-msg ai">${reply.replace(/\n/g,'<br>')}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+  } catch(e) {
+    const el = document.getElementById(loadingId);
+    if(el) el.innerHTML = 'Connection error. Check your internet and try again.';
+  }
+}
+
+function renderSettings() {
+  const s = state.settings;
+  document.getElementById('holdDurInput').value = s.holdDur;
+  document.getElementById('restDurInput').value = s.restDur;
+  document.getElementById('setsInput').value = s.sets;
+  document.getElementById('holdDurLabel').textContent = s.holdDur + ' seconds';
+  document.getElementById('restDurLabel').textContent = s.restDur + ' seconds';
+  document.getElementById('setsLabel').textContent = s.sets + ' sets';
+  document.getElementById('vibrateToggle').className = 'toggle' + (s.vibrate?' on':'');
+  document.getElementById('notifToggle').className = 'toggle' + (s.notif?' on':'');
+}
+
+function updateSettings() {
+  state.settings.holdDur = +document.getElementById('holdDurInput').value;
+  state.settings.restDur = +document.getElementById('restDurInput').value;
+  state.settings.sets = +document.getElementById('setsInput').value;
+  document.getElementById('holdDurLabel').textContent = state.settings.holdDur + ' seconds';
+  document.getElementById('restDurLabel').textContent = state.settings.restDur + ' seconds';
+  document.getElementById('setsLabel').textContent = state.settings.sets + ' sets';
+  save(); renderSessionPlan(); buildPips();
+}
+
+function toggleVibrate() { state.settings.vibrate = !state.settings.vibrate; save(); renderSettings(); }
+function toggleNotif() { state.settings.notif = !state.settings.notif; save(); renderSettings(); }
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'kegelfit_backup.json'; a.click();
+}
+
+function clearData() {
+  if (confirm('Reset all progress data? This cannot be undone.')) { localStorage.removeItem('kegelfit_v1'); location.reload(); }
+}
+
+function showExplainModal() {
+  alert('Kegel exercises strengthen the pelvic floor muscles.\n\n✅ Squeeze: Tighten pelvic floor muscles firmly\n✅ Hold: Keep contracted for the hold duration\n✅ Relax: Fully release between sets\n✅ Breathe: Never hold your breath\n\nTip: Identify the muscles by trying to stop urination midstream.');
+}
+
+// ── SERVICE WORKER (proper file registration) ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('SW registered:', reg.scope);
+    }).catch(err => console.log('SW error:', err));
+  });
+}
+
+// ── INIT ──
+if (state.totalSessions > 0 || localStorage.getItem('kegelfit_v1')) {
+  document.getElementById('onboarding').style.display = 'none';
+  initAll();
+}
+</script>
+</body>
+</html>
